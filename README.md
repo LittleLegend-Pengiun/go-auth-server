@@ -7,3 +7,7 @@ CompileDaemon --command="./go-auth-server"
 ```
 
 This project is powered by [GIn](https://gin-gonic.com/docs/quickstart/) and [GORM](https://gorm.io/) with SQLLite.
+
+## Testing
+
+This repository is already included a Postman JSON file, which contains all needed sample requests for every route. You just need to take it from `postman` folder, and import the collection to your Postman application.
