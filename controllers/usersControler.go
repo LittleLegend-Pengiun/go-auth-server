@@ -7,32 +7,37 @@ import (
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
 
-func SignUp(c *gin.Context) {
-	// Get the username and password of req body
-	var body struct {
-		Username string
-		Password string
-	}
+type bodyStruct struct {
+	Username string `json:"username"`
+	Password string `json:"password"`
+}
 
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+func SignUp(c *fiber.Ctx) error {
+	// Get the username and password of req body
+	body := new(bodyStruct)
+
+	if err := c.BodyParser(body); err != nil {
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Failed to read body",
 		})
-		return
+		return nil
 	}
+
 	// Hash the password
 	hash, err := bcrypt.GenerateFromPassword([]byte(body.Password), 10)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Failed to hash password",
 		})
-		return
+		return nil
 	}
 
 	// Create user
@@ -40,30 +45,32 @@ func SignUp(c *gin.Context) {
 
 	result := initializers.DB.Create(&user) // pass pointer of data to Create
 	if result.Error != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Failed to create user",
 		})
-		return
+		return nil
 	}
 	// Response
 
-	c.JSON(http.StatusOK, gin.H{
+	c.SendStatus(http.StatusOK)
+	c.JSON(fiber.Map{
 		"message": "SignUp",
 	})
+
+	return nil
 }
 
-func Login(c *gin.Context) {
+func Login(c *fiber.Ctx) error {
 	// Get the username/pass from req body
-	var body struct {
-		Username string
-		Password string
-	}
+	body := new(bodyStruct)
 
-	if c.Bind(&body) != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+	if err := c.BodyParser(body); err != nil {
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Failed to read body",
 		})
-		return
+		return nil
 	}
 
 	// Look up requested user
@@ -71,20 +78,22 @@ func Login(c *gin.Context) {
 	initializers.DB.First(&user, "username = ?", body.Username)
 
 	if user.ID == 0 {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Invalid username or password",
 		})
-		return
+		return nil
 	}
 
 	// Compare sent in pass with saved user pass hash
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(body.Password))
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Invalid username or password",
 		})
-		return
+		return nil
 	}
 
 	// Generate a jwt token
@@ -99,27 +108,45 @@ func Login(c *gin.Context) {
 
 	if err != nil {
 
-		c.JSON(http.StatusBadRequest, gin.H{
+		c.SendStatus(http.StatusBadRequest)
+		c.JSON(fiber.Map{
 			"error": "Failed to create token",
 		})
 		// log.Fatal("Secret is::", os.Getenv("SECRET"))
-		return
+		return nil
 	}
 
 	// Send it back as cookies
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("Authorization", tokenString, 3600*24*30, "", "", false, true)
+	cookie := fiber.Cookie{
+		Name:     "Authorization",
+		Value:    tokenString,
+		Expires:  time.Now().Add(24 * time.Hour),
+		Path:     "",
+		Domain:   "",
+		Secure:   false,
+		HTTPOnly: true,
+		SameSite: "lax",
+	}
+
+	// Set cookie
+	c.Cookie(&cookie)
 
 	// Send it back as request
-	c.JSON(http.StatusOK, gin.H{
-		// "token": tokenString,
+	c.SendStatus(http.StatusOK)
+	c.JSON(fiber.Map{
+		"token": tokenString,
 	})
+
+	return nil
 }
 
-func Validate(c *gin.Context) {
-	user, _ := c.Get("user")
+func Validate(c *fiber.Ctx) error {
+	user := c.Locals("user")
 
-	c.JSON(http.StatusOK, gin.H{
+	c.SendStatus(http.StatusOK)
+	c.JSON(fiber.Map{
 		"user_info": user,
 	})
+
+	return nil
 }

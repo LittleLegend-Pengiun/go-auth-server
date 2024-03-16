@@ -4,21 +4,19 @@ import (
 	"fmt"
 	"go-auth-server/initializers"
 	"go-auth-server/models"
-	"log"
-	"net/http"
 	"os"
 	"time"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/log"
 	"github.com/golang-jwt/jwt/v5"
 )
 
-func RequireAuth(c *gin.Context) {
+func RequireAuth(c *fiber.Ctx) error {
 	// Get the cookie of req
-	tokenString, err := c.Cookie("Authorization")
-
-	if err != nil {
-		c.AbortWithStatus(http.StatusUnauthorized)
+	tokenString := c.Cookies("Authorization")
+	if tokenString == "" {
+		return fiber.ErrUnauthorized
 	}
 
 	// Decode/validate it
@@ -34,14 +32,14 @@ func RequireAuth(c *gin.Context) {
 	})
 
 	if err != nil {
-		c.AbortWithStatus(http.StatusInternalServerError)
-		log.Fatal(err)
+		log.Error(err)
+		return fiber.ErrInternalServerError
 	}
 
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
 		// Check the exp compare to time.unix
 		if float64(time.Now().Unix()) > claims["exp"].(float64) {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			return fiber.ErrUnauthorized
 		}
 
 		// Find the user with token sub
@@ -49,16 +47,16 @@ func RequireAuth(c *gin.Context) {
 		initializers.DB.First(&user, claims["sub"])
 
 		if user.ID == 0 {
-			c.AbortWithStatus(http.StatusUnauthorized)
+			return fiber.ErrUnauthorized
 		}
 
 		// Attach to req
-		c.Set("user", user)
+		c.Locals("user", user)
 
 		// Continue
-		c.Next()
+		return c.Next()
 
 	} else {
-		c.AbortWithStatus(http.StatusUnauthorized)
+		return fiber.ErrUnauthorized
 	}
 }
