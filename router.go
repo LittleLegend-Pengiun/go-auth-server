@@ -2,18 +2,21 @@ package main
 
 import (
 	"go-auth-server/controllers"
+	"go-auth-server/middlewares"
 	"net/http"
 
 	"github.com/gofiber/fiber/v2"
 )
 
 func router(app *fiber.App) {
+	app.Use("/validation", middlewares.RequireAuth)
+
 	app.Get("/", Hello)
 	app.Get("/users", controllers.GetAllUsers)
-	// e.GET("/validation", middlewares.RequireAuth, controllers.Validate)
+	app.Get("/validation", controllers.Validate)
 
-	// e.POST("/signup", controllers.SignUp)
-	// e.POST("/login", controllers.Login)
+	app.Post("/signup", controllers.SignUp)
+	app.Post("/login", controllers.Login)
 }
 
 func Hello(c *fiber.Ctx) error {
