@@ -5,23 +5,26 @@ import (
 	"go-auth-server/models"
 	"net/http"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
 )
 
-func GetAllUsers(c *gin.Context) {
+func GetAllUsers(c *fiber.Ctx) error {
 	var users []models.User
 
 	tx := initializers.DB.Find(&users)
 
 	if tx.Error != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{
+		c.SendStatus(http.StatusInternalServerError)
+		c.JSON(fiber.Map{
 			"message": "Cannot fetch user from database",
 		})
-		return
+		return tx.Error
 	}
 
-	c.JSON(http.StatusOK, gin.H{
+	c.SendStatus(http.StatusOK)
+	c.JSON(fiber.Map{
 		"users_list": users,
 	})
 
+	return nil
 }

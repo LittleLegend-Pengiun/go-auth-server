@@ -2,8 +2,10 @@ package main
 
 import (
 	"go-auth-server/initializers"
+	"os"
 
-	"github.com/gin-gonic/gin"
+	"github.com/gofiber/fiber/v2"
+	"github.com/gofiber/fiber/v2/middleware/logger"
 )
 
 func init() {
@@ -13,7 +15,14 @@ func init() {
 }
 
 func main() {
-	r := gin.Default()
-	router(r)
-	r.Run() // listen and serve on localhost:3000
+	port := ":" + os.Getenv("PORT")
+
+	app := fiber.New()
+	logConfig(app)
+	router(app)
+	app.Listen(port)
+}
+
+func logConfig(app *fiber.App) {
+	app.Use(logger.New())
 }
