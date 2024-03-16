@@ -1,8 +1,8 @@
 package main
 
 import (
-	"jwt-token/controllers"
-	"jwt-token/middlewares"
+	"go-auth-server/controllers"
+	"go-auth-server/middlewares"
 
 	"github.com/gin-gonic/gin"
 )

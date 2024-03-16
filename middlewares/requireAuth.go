@@ -2,8 +2,8 @@ package middlewares
 
 import (
 	"fmt"
-	"jwt-token/initializers"
-	"jwt-token/models"
+	"go-auth-server/initializers"
+	"go-auth-server/models"
 	"log"
 	"net/http"
 	"os"

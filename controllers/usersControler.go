@@ -1,8 +1,8 @@
 package controllers
 
 import (
-	"jwt-token/initializers"
-	"jwt-token/models"
+	"go-auth-server/initializers"
+	"go-auth-server/models"
 	"net/http"
 	"os"
 	"time"

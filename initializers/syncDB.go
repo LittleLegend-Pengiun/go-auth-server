@@ -1,7 +1,7 @@
 package initializers
 
 import (
-	"jwt-token/models"
+	"go-auth-server/models"
 )
 
 func SyncDatabase() {

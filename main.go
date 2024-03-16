@@ -1,7 +1,7 @@
 package main
 
 import (
-	"jwt-token/initializers"
+	"go-auth-server/initializers"
 
 	"github.com/gin-gonic/gin"
 )
