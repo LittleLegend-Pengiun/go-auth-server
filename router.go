@@ -9,6 +9,7 @@ import (
 )
 
 func router(app *fiber.App) {
+	// Apply middleware before binding route
 	app.Use("/validation", middlewares.RequireAuth)
 
 	app.Get("/", Hello)

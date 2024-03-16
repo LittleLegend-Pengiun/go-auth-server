@@ -18,7 +18,7 @@ func GetAllUsers(c *fiber.Ctx) error {
 		c.JSON(fiber.Map{
 			"message": "Cannot fetch user from database",
 		})
-		return tx.Error
+		return nil
 	}
 
 	c.SendStatus(http.StatusOK)
